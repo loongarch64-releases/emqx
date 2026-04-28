@@ -1,0 +1,37 @@
+ARG EL_VERSION=27
+FROM lcr.loongnix.cn/library/erlang:${EL_VERSION}-slim
+
+RUN sed -i "s/debian-ports/debian/" /etc/apt/sources.list.d/debian.sources
+RUN sed -i "s/sid unreleased/unstable/" /etc/apt/sources.list.d/debian.sources
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+       ca-certificates \
+       autoconf \
+       automake \
+       bison \
+       build-essential \
+       cmake \
+       curl \
+       debhelper \
+       flex \
+       git \
+       libffi-dev \
+       libkrb5-dev \
+       libncurses5-dev \
+       libsasl2-dev \
+       libssl-dev \
+       libtool \
+       procps \
+       python3 \
+       elixir \
+       unixodbc-dev \
+       unzip \
+       zip \
+       zlib1g-dev \
+       git \
+       cargo \
+       protobuf-compiler \
+    && rm -rf /var/lib/apt/lists/*
+
+CMD ["/bin/bash"]
