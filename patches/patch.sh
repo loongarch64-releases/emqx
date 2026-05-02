@@ -16,6 +16,10 @@ patch_rocksdb()
 {
     local ROCKSDB_DIR="${DEP_BASE}/rocksdb/deps/rocksdb"
 
+    # 避免重复补丁
+    if grep -q "loongarch64" "${ROCKSDB_DIR}/Makefile"; then
+    sed -i 's/-mcpu=loongarch64/-march=loongarch64/' "${ROCKSDB_DIR}/CMakeLists.txt"
+    else
     sed -i 's/sparc64/sparc64 loongarch64/' "${ROCKSDB_DIR}/Makefile"
     sed -i 's/defined(_M_ARM64)/& || defined(__loongarch64)/' "${ROCKSDB_DIR}/util/xxhash.h"
     sed -i '/pause/a \
@@ -38,7 +42,8 @@ endif(CMAKE_SYSTEM_PROCESSOR MATCHES "loongarch64")' "${ROCKSDB_DIR}/CMakeLists.
     if(CMAKE_SYSTEM_PROCESSOR MATCHES "^loongarch64") \
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -march=loongarch64") \
     endif()' "${ROCKSDB_DIR}/CMakeLists.txt"
-
+    fi
+    
     # 旧版本的 rocksdb 依赖隐式包含的 <cstdint>，而构建环境的 GCC 较新，去掉了这个隐式包含
     sed -i '/#pragma once/a \
 #include <cstdint>' "${ROCKSDB_DIR}/db/blob/blob_file_meta.h"
