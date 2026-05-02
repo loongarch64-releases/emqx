@@ -17,7 +17,7 @@ patch_rocksdb()
     local ROCKSDB_DIR="${DEP_BASE}/rocksdb/deps/rocksdb"
 
     sed -i 's/sparc64/sparc64 loongarch64/' "${ROCKSDB_DIR}/Makefile"
-    sed -i 's/defined(_M_ARM64)/& || defined(__loongarch64) ||/' "${ROCKSDB_DIR}/util/xxhash.h"
+    sed -i 's/defined(_M_ARM64)/& || defined(__loongarch64)/' "${ROCKSDB_DIR}/util/xxhash.h"
     sed -i '/pause/a \
 #elif defined(__loongarch64) \
   asm volatile("dbar 0");' "${ROCKSDB_DIR}/port/port_posix.h"

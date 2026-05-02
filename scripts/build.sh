@@ -36,6 +36,9 @@ prepare()
 # 2. 编译阶段：核心构建命令
 build()
 {
+    CLEAR_VER=${VERSION#v} && CLEAR_VER=${CLEAR_VER#e}
+    MAJOR_VER=$(echo "$CLEAR_VER" | cut -d. -f1)
+	
     echo "🔨 [Build] Compiling source code..."
     export CC="cc -fPIC -mcmodel=medium  -fpermissive -w -std=gnu99"
     export CXX="c++ -fPIC -mcmodel=medium  -fpermissive -w -std=gnu99"
@@ -47,10 +50,23 @@ build()
     else
 	EMQX_GOAL=emqx-enterprise
     fi
-    make "${EMQX_GOAL}" || true
+
+	if [ "${MAJOR_VER}" -lt 6 ]; then
+	DEP_GOAL="deps-${EMQX_GOAL}"
+	else
+	DEP_GOAL=mix-deps-get
+	fi
+
+    # 拉取依赖
+	make "${DEP_GOAL}"
+	# 依赖打补丁
     "${PATCHES}/patch.sh" "${SRCS}/${VERSION}" "${VERSION}"
+	# 构建
+    make "${EMQX_GOAL}"
+	# 打包
     make "${EMQX_GOAL}-tgz"
     make "${EMQX_GOAL}-pkg"
+	
     popd
 
     echo "✅ [Build] Compilation finished."

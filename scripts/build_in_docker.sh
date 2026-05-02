@@ -32,9 +32,7 @@ CLEAR_VER=${VERSION#v} && CLEAR_VER=${CLEAR_VER#e}
 MAJOR_VER=$(echo "$CLEAR_VER" | cut -d. -f1)
 MINOR_VER=$(echo "$CLEAR_VER" | cut -d. -f2)
 VER_NUM=$(( 10#$MAJOR_VER * 1000 + 10#$MINOR_VER ))
-if [ "${VER_NUM}" -ge 6001 ]; then
-    EL_VER=28
-elif [ "${VER_NUM}" -ge 5009 ]; then
+if [ "${VER_NUM}" -ge 5009 ]; then
     EL_VER=27
 elif [ "${VER_NUM}" -ge 5004 ]; then
     EL_VER=26
