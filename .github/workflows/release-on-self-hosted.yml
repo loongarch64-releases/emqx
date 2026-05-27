@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 env:
-  UPSTREAM_ORG: "emqx"
+  UPSTREAM_OWNER: "emqx"
   UPSTREAM_REPO: "emqx"
 
 jobs:
