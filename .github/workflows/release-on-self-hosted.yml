@@ -1,8 +1,6 @@
 name: Auto Build emqx (Self-hosted)
 
 on:
-  schedule:
-    - cron: '0 16 * * *'
   workflow_dispatch:
 
 env:
