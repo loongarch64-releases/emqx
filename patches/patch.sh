@@ -4,6 +4,10 @@ set -euo pipefail
 
 SRC="${1}"
 VERSION="${2}"
+MAJOR_VER=$(echo "$VERSION" | cut -d. -f1)
+MINOR_VER=$(echo "$VERSION" | cut -d. -f2)
+PATCH_VER=$(echo "$VERSION" | cut -d. -f3)
+VER_NUM=$(( 10#$MAJOR_VER * 1000000 + 10#$MINOR_VER * 1000 + 10#$PATCH_VER ))
 
 patch_jiffy()
 {
@@ -53,7 +57,43 @@ endif(CMAKE_SYSTEM_PROCESSOR MATCHES "loongarch64")' "${ROCKSDB_DIR}/CMakeLists.
 #include <cstdint>' "${ROCKSDB_DIR}/include/rocksdb/trace_record_result.h"
 }
 
-main()
+# 通用补丁
+universal_adaptation()
+{
+    local DEP_BASE="${1}"
+    patch_jiffy "${DEP_BASE}"
+    patch_rocksdb "${DEP_BASE}"
+}
+
+# 不同版本适配
+multi_version_adaptation()
+{
+    local DEP_BASE="${1}"
+
+    if [ "${VER_NUM}" -ge 6002001 ]; then
+        # 和前面版本一样，在没有 mnesia_hook 的 erlang 上走 mnesia 后端
+        local MRIA_CONFIG="${DEP_BASE}/mria/src/mria_config.erl"
+        local MARIA_RLOG="${DEP_BASE}/mria/src/mria_rlog.erl"
+        sed -i '/-spec load_config()/,/consistency_check()/ {/consistency_check()/i\
+    copy_from_env(db_backend),
+}' "${MRIA_CONFIG}"
+        sed -i '/mnesia_hook:register_hook/d' "${MARIA_RLOG}"
+        sed -i '/mria_rlog_replica:create_tabs()/d' "${MARIA_RLOG}"
+        sed -i '/-spec init()/{
+  N
+  /-spec init().*\ninit()/a\
+    case mria_config:whoami() of\
+        mnesia ->\
+            ok;\
+        _ ->\
+            mnesia_hook:register_hook(post_commit, fun ?MODULE:intercept_trans/2),\
+            mria_rlog_replica:create_tabs()\
+    end.
+}' "${MARIA_RLOG}"
+    fi
+}
+
+patch()
 {
     CLEAR_VER=${VERSION#v} && CLEAR_VER=${CLEAR_VER#e}
     MAJOR_VER=$(echo "$CLEAR_VER" | cut -d. -f1)
@@ -62,9 +102,11 @@ main()
     else
         DEP_BASE="${SRC}/deps"
     fi
-    patch_jiffy "${DEP_BASE}"
-    patch_rocksdb "${DEP_BASE}"
+    echo "patching..."
+    universal_adaptation "${DEP_BASE}"
+    multi_version_adaptation "${DEP_BASE}"
+    echo "done"
 }
 
-main
+patch
 

@@ -51,19 +51,19 @@ build()
 	EMQX_GOAL=emqx-enterprise
     fi
 
-	if [ "${MAJOR_VER}" -lt 6 ]; then
+    if [ "${MAJOR_VER}" -lt 6 ]; then
 	DEP_GOAL="deps-${EMQX_GOAL}"
-	else
+    else
 	DEP_GOAL=mix-deps-get
-	fi
+    fi
 
     # 拉取依赖
-	make "${DEP_GOAL}"
-	# 依赖打补丁
+    make "${DEP_GOAL}"
+    # 依赖打补丁
     "${PATCHES}/patch.sh" "${SRCS}/${VERSION}" "${VERSION}"
-	# 构建
+    # 构建
     make "${EMQX_GOAL}"
-	# 打包
+    # 打包
     make "${EMQX_GOAL}-tgz"
     make "${EMQX_GOAL}-pkg"
 	
