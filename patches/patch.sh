@@ -9,13 +9,6 @@ MINOR_VER=$(echo "$VERSION" | cut -d. -f2)
 PATCH_VER=$(echo "$VERSION" | cut -d. -f3)
 VER_NUM=$(( 10#$MAJOR_VER * 1000000 + 10#$MINOR_VER * 1000 + 10#$PATCH_VER ))
 
-patch_jiffy()
-{
-    local JIFFY_DIR="${DEP_BASE}/jiffy"
-
-    sed -i 's/defined(__riscv) ||/& defined(__loongarch64) ||/' "${JIFFY_DIR}/c_src/double-conversion/utils.h"
-}
-
 patch_rocksdb()
 {
     local ROCKSDB_DIR="${DEP_BASE}/rocksdb/deps/rocksdb"
@@ -61,7 +54,6 @@ endif(CMAKE_SYSTEM_PROCESSOR MATCHES "loongarch64")' "${ROCKSDB_DIR}/CMakeLists.
 universal_adaptation()
 {
     local DEP_BASE="${1}"
-    patch_jiffy "${DEP_BASE}"
     patch_rocksdb "${DEP_BASE}"
 }
 
@@ -69,6 +61,12 @@ universal_adaptation()
 multi_version_adaptation()
 {
     local DEP_BASE="${1}"
+
+    # jiffy 补丁
+    if [ "${VER_NUM}" -lt 6003000 ]; then
+        local JIFFY_DIR="${DEP_BASE}/jiffy"
+        sed -i 's/defined(__riscv) ||/& defined(__loongarch64) ||/' "${JIFFY_DIR}/c_src/double-conversion/utils.h"
+    fi
 
     if [ "${VER_NUM}" -ge 6002001 ]; then
         # 和前面版本一样，在没有 mnesia_hook 的 erlang 上走 mnesia 后端
